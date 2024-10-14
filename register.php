@@ -1,43 +1,81 @@
 <?php
+header('Content-Type: application/json');
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $name = $_POST['name'];
-    $email = $_POST['email'];
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT); // Hash the password
-    $phone = $_POST['phone'];
+    $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
+    $firstName = filter_var($_POST['firstName'], FILTER_SANITIZE_STRING);
+    $lastName = filter_var($_POST['lastName'], FILTER_SANITIZE_STRING);
+    $password = $_POST['password'];
+    $retypePassword = $_POST['retypePassword'];
+    $phone = filter_var($_POST['phone'], FILTER_SANITIZE_STRING);
+
+    // Server-side validation
+    $errors = [];
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "Invalid email format";
+    }
+
+    if ($password !== $retypePassword) {
+        $errors[] = "Passwords do not match";
+    }
+
+    if (!preg_match('/^(0\d{1}(\s)?\d{8})$/', $phone)) {
+        $errors[] = "Invalid phone format. Use (0d)dddddddd or 0d dddddddd";
+    }
+
+    // Check if customer.xml exists, if not create it
+    if (!file_exists('customer.xml')) {
+        $xml = new DOMDocument('1.0', 'UTF-8');
+        $root = $xml->createElement('customers');
+        $xml->appendChild($root);
+        $xml->save('customer.xml');
+    }
 
     // Load the XML file
     $xml = new DOMDocument();
     $xml->load('customer.xml');
 
-    // Check if email already exists
+    // Check if email is unique
     $customers = $xml->getElementsByTagName('customer');
     foreach ($customers as $customer) {
         if ($customer->getElementsByTagName('email')->item(0)->nodeValue == $email) {
-            die("Error: Email already exists");
+            $errors[] = "Email already exists";
+            break;
         }
     }
 
-    // Generate a unique customer ID
-    $customerId = uniqid('CUST');
+    if (count($errors) > 0) {
+        echo json_encode(['status' => 'error', 'message' => implode('<br>', $errors)]);
+        exit;
+    }
 
-    // Create a new customer element
+    // If no errors, proceed with registration
+    $customerId = uniqid('CUST');
+    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
     $newCustomer = $xml->createElement('customer');
     $newCustomer->appendChild($xml->createElement('id', $customerId));
-    $newCustomer->appendChild($xml->createElement('name', $name));
     $newCustomer->appendChild($xml->createElement('email', $email));
-    $newCustomer->appendChild($xml->createElement('password', $password));
+    $newCustomer->appendChild($xml->createElement('firstName', $firstName));
+    $newCustomer->appendChild($xml->createElement('lastName', $lastName));
+    $newCustomer->appendChild($xml->createElement('password', $hashedPassword));
     $newCustomer->appendChild($xml->createElement('phone', $phone));
 
-    // Append the new customer to the root element
     $xml->documentElement->appendChild($newCustomer);
 
-    // Save the updated XML
-    $xml->save('customer.xml');
-
-    echo "Registration successful! Your customer ID is: " . $customerId;
-    echo "<br><a href='buyonline.htm'>Back to Main Page</a>";
+    if ($xml->save('customer.xml')) {
+        echo json_encode([
+            'status' => 'success',
+            'message' => "Registration successful! Your customer ID is: $customerId"
+        ]);
+    } else {
+        echo json_encode([
+            'status' => 'error',
+            'message' => "Error saving customer information. Please try again."
+        ]);
+    }
 } else {
-    header("Location: register.htm");
-    exit();
+    echo json_encode(['status' => 'error', 'message' => "Invalid request method"]);
 }
 ?>

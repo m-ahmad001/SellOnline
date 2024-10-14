@@ -53,6 +53,10 @@
             color: red;
             margin-top: 5px;
         }
+        .success {
+            color: green;
+            margin-top: 5px;
+        }
         .back-link {
             display: block;
             margin-top: 20px;
@@ -64,21 +68,27 @@
     <div class="container">
         <h1>Customer Registration</h1>
         <form id="registrationForm" action="register.php" method="post">
-            <label for="name">Name:</label>
-            <input type="text" id="name" name="name" required>
-            
             <label for="email">Email:</label>
             <input type="email" id="email" name="email" required>
+            
+            <label for="firstName">First Name:</label>
+            <input type="text" id="firstName" name="firstName" required>
+            
+            <label for="lastName">Last Name:</label>
+            <input type="text" id="lastName" name="lastName" required>
             
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" required>
             
-            <label for="phone">Phone:</label>
+            <label for="retypePassword">Re-type Password:</label>
+            <input type="password" id="retypePassword" name="retypePassword" required>
+            
+            <label for="phone">Phone Number:</label>
             <input type="tel" id="phone" name="phone" required>
             
             <button type="submit">Register</button>
         </form>
-        <div id="errorMessages"></div>
+        <div id="message"></div>
         <a href="buyonline.htm" class="back-link">Back to Main Page</a>
     </div>
 
@@ -87,6 +97,8 @@
             e.preventDefault();
             var errorMessages = [];
             var email = document.getElementById('email').value;
+            var password = document.getElementById('password').value;
+            var retypePassword = document.getElementById('retypePassword').value;
             var phone = document.getElementById('phone').value;
 
             // Email validation
@@ -94,15 +106,41 @@
                 errorMessages.push("Invalid email format");
             }
 
-            // Phone validation (simple format: XXX-XXX-XXXX)
-            if (!/^\d{3}-\d{3}-\d{4}$/.test(phone)) {
-                errorMessages.push("Invalid phone format. Use XXX-XXX-XXXX");
+            // Password match validation
+            if (password !== retypePassword) {
+                errorMessages.push("Passwords do not match");
+            }
+
+            // Phone validation
+            if (!/^(0\d{1}(\s)?\d{8})$/.test(phone)) {
+                errorMessages.push("Invalid phone format. Use (0d)dddddddd or 0d dddddddd");
             }
 
             if (errorMessages.length > 0) {
-                document.getElementById('errorMessages').innerHTML = errorMessages.join('<br>');
+                document.getElementById('message').innerHTML = errorMessages.join('<br>');
+                document.getElementById('message').className = 'error';
             } else {
-                this.submit();
+                // If client-side validation passes, submit the form
+                fetch('register.php', {
+                    method: 'POST',
+                    body: new FormData(this)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        document.getElementById('message').innerHTML = data.message;
+                        document.getElementById('message').className = 'success';
+                        this.reset();
+                    } else {
+                        document.getElementById('message').innerHTML = data.message;
+                        document.getElementById('message').className = 'error';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('message').innerHTML = 'An error occurred. Please try again.';
+                    document.getElementById('message').className = 'error';
+                });
             }
         });
     </script>

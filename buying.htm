@@ -1,149 +1,202 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Buy Items - BuyOnline</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #333;
-            text-align: center;
-        }
-        #itemList {
-            margin-top: 20px;
-        }
-        .item {
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 4px;
-        }
-        .item button {
-            background-color: #28a745;
-            color: #fff;
-            border: none;
-            padding: 5px 10px;
-            cursor: pointer;
-            border-radius: 4px;
-        }
-        .item button:hover {
-            background-color: #218838;
-        }
-        #cart {
-            margin-top: 20px;
-            border-top: 2px solid #333;
-            padding-top: 20px;
-        }
-        #checkout, #logout {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: #fff;
-            text-decoration: none;
-            border-radius: 4px;
-        }
-        #checkout:hover, #logout:hover {
-            background-color: #0056b3;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        margin: 0;
+        padding: 20px;
+        background-color: #f4f4f4;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #333;
+        text-align: center;
+      }
+      #itemList {
+        margin-top: 20px;
+      }
+      .item {
+        border: 1px solid #ddd;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+      }
+      .item button {
+        background-color: #28a745;
+        color: #fff;
+        border: none;
+        padding: 5px 10px;
+        cursor: pointer;
+        border-radius: 4px;
+      }
+      .item button:hover {
+        background-color: #218838;
+      }
+      #cart {
+        margin-top: 20px;
+        border-top: 2px solid #333;
+        padding-top: 20px;
+      }
+      #checkout,
+      #logout {
+        display: inline-block;
+        margin-top: 20px;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 4px;
+      }
+      #checkout:hover,
+      #logout:hover {
+        background-color: #0056b3;
+      }
+      .remove-btn {
+        background-color: #dc3545;
+        color: #fff;
+        border: none;
+        padding: 5px 10px;
+        cursor: pointer;
+        border-radius: 4px;
+        margin-left: 10px;
+      }
+      .remove-btn:hover {
+        background-color: #c82333;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <h1>Available Items</h1>
-        <div id="itemList"></div>
-        <div id="cart">
-            <h2>Shopping Cart</h2>
-            <ul id="cartItems"></ul>
-            <p>Total: $<span id="cartTotal">0.00</span></p>
-        </div>
-        <button id="checkout">Checkout</button>
-        <a href="logout.php" id="logout">Logout</a>
+      <h1>Available Items</h1>
+      <div id="itemList"></div>
+      <div id="cart">
+        <h2>Shopping Cart</h2>
+        <ul id="cartItems"></ul>
+        <p>Total: $<span id="cartTotal">0.00</span></p>
+      </div>
+      <button id="checkout">Checkout</button>
+      <a href="logout.php" id="logout">Logout</a>
     </div>
 
     <script>
-        let cart = [];
+      let cart = [];
 
-        function fetchItems() {
-            fetch('get_items.php')
-                .then(response => response.json())
-                .then(items => {
-                    const itemList = document.getElementById('itemList');
-                    itemList.innerHTML = '';
-                    items.forEach(item => {
-                        const itemDiv = document.createElement('div');
-                        itemDiv.className = 'item';
-                        itemDiv.innerHTML = `
+      function fetchItems() {
+        fetch("get_items.php")
+          .then((response) => response.json())
+          .then((items) => {
+            const itemList = document.getElementById("itemList");
+            itemList.innerHTML = "";
+            items.forEach((item) => {
+              const itemDiv = document.createElement("div");
+              itemDiv.className = "item";
+              itemDiv.innerHTML = `
                             <h3>${item.name}</h3>
                             <p>Price: $${item.price}</p>
                             <p>Quantity: ${item.quantity}</p>
                             <button onclick="addToCart('${item.id}', '${item.name}', ${item.price})">Add to Cart</button>
                         `;
-                        itemList.appendChild(itemDiv);
-                    });
-                });
-        }
-
-        function addToCart(id, name, price) {
-            const existingItem = cart.find(item => item.id === id);
-            if (existingItem) {
-                existingItem.quantity++;
-            } else {
-                cart.push({ id, name, price, quantity: 1 });
-            }
-            updateCart();
-        }
-
-        function updateCart() {
-            const cartItems = document.getElementById('cartItems');
-            const cartTotal = document.getElementById('cartTotal');
-            cartItems.innerHTML = '';
-            let total = 0;
-            cart.forEach(item => {
-                const li = document.createElement('li');
-                li.textContent = `${item.name} x ${item.quantity} - $${(item.price * item.quantity).toFixed(2)}`;
-                cartItems.appendChild(li);
-                total += item.price * item.quantity;
+              itemList.appendChild(itemDiv);
             });
-            cartTotal.textContent = total.toFixed(2);
+          });
+      }
+
+      function addToCart(id, name, price) {
+        const existingItem = cart.find((item) => item.id === id);
+        if (existingItem) {
+          existingItem.quantity++;
+        } else {
+          cart.push({ id, name, price, quantity: 1 });
         }
+        updateCart();
+      }
 
-        document.getElementById('checkout').addEventListener('click', () => {
-            if (confirm('Are you sure you want to checkout?')) {
-                fetch('checkout.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(cart),
-                })
-                .then(response => response.text())
-                .then(result => {
-                    alert(result);
-                    cart = [];
-                    updateCart();
-                    fetchItems();
-                });
-            }
+      function updateCart() {
+        const cartItems = document.getElementById("cartItems");
+        const cartTotal = document.getElementById("cartTotal");
+        cartItems.innerHTML = "";
+        let total = 0;
+        cart.forEach((item, index) => {
+          const li = document.createElement("li");
+          li.innerHTML = `
+                    ${item.name} x ${item.quantity} - $${(
+            item.price * item.quantity
+          ).toFixed(2)}
+                    <button class="remove-btn" onclick="removeFromCart(${index})">Remove</button>
+                `;
+          cartItems.appendChild(li);
+          total += item.price * item.quantity;
         });
+        cartTotal.textContent = total.toFixed(2);
+      }
 
-        fetchItems();
-        setInterval(fetchItems, 10000);
+      function removeFromCart(index) {
+        const removedItem = cart[index];
+        fetch("update_item_quantity.php", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: removedItem.id,
+            quantity: removedItem.quantity,
+            action: "increase",
+          }),
+        })
+          .then((response) => response.text())
+          .then((result) => {
+            console.log(result);
+            if (result.status === "success") {
+              cart.splice(index, 1);
+              updateCart();
+              fetchItems();
+            } else {
+              alert("Error removing item from cart. Please try again.");
+            }
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+            alert("Error removing item from cart. Please try again.");
+          });
+      }
+
+      document.getElementById("checkout").addEventListener("click", () => {
+        if (confirm("Are you sure you want to checkout?")) {
+          fetch("checkout.php", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(cart),
+          })
+            .then((response) => response.text())
+            .then((result) => {
+              alert(result);
+              cart = [];
+              updateCart();
+              fetchItems();
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              alert("Error processing checkout. Please try again.");
+            });
+        }
+      });
+
+      fetchItems();
+      setInterval(fetchItems, 10000);
     </script>
-</body>
+  </body>
 </html>

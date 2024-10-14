@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <customers>
     <!-- Customer data will be added here -->
-</customers>
+<customer><id>CUST670cfd3f1e98e</id><name>Muhammad Ahmad</name><email>mahmadamir2001@gmail.com</email><password>$2y$10$UPW/EBNer9J/Z09Jop6rTu3sPq8eUvkT72pqTPCudq4nYG3M.3Xty</password><phone>123-222-2222</phone></customer></customers>
