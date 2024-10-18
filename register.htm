@@ -125,14 +125,21 @@
                     method: 'POST',
                     body: new FormData(this)
                 })
-                .then(response => response.json())
+                .then(response => response.text())
                 .then(data => {
-                    if (data.status === 'success') {
-                        document.getElementById('message').innerHTML = data.message;
-                        document.getElementById('message').className = 'success';
-                        this.reset();
-                    } else {
-                        document.getElementById('message').innerHTML = data.message;
+                    try {
+                        const jsonData = JSON.parse(data);
+                        if (jsonData.status === 'success') {
+                            document.getElementById('message').innerHTML = jsonData.message;
+                            document.getElementById('message').className = 'success';
+                            this.reset();
+                        } else {
+                            document.getElementById('message').innerHTML = jsonData.message;
+                            document.getElementById('message').className = 'error';
+                        }
+                    } catch (error) {
+                        console.error('Error parsing JSON:', error);
+                        document.getElementById('message').innerHTML = data;
                         document.getElementById('message').className = 'error';
                     }
                 })

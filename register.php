@@ -3,11 +3,11 @@ header('Content-Type: application/json');
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
-    $firstName = filter_var($_POST['firstName'], FILTER_SANITIZE_STRING);
-    $lastName = filter_var($_POST['lastName'], FILTER_SANITIZE_STRING);
+    $firstName = htmlspecialchars($_POST['firstName'], ENT_QUOTES, 'UTF-8');
+    $lastName = htmlspecialchars($_POST['lastName'], ENT_QUOTES, 'UTF-8');
     $password = $_POST['password'];
     $retypePassword = $_POST['retypePassword'];
-    $phone = filter_var($_POST['phone'], FILTER_SANITIZE_STRING);
+    $phone = htmlspecialchars($_POST['phone'], ENT_QUOTES, 'UTF-8');
 
     // Server-side validation
     $errors = [];
