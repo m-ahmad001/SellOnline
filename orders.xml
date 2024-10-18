@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<orders>
+    <order processed="false">
+        <id>ORDER123456</id>
+        <customer_id>CUST123</customer_id>
+        <order_date>2023-04-18 15:30:00</order_date>
+        <items>
+            <item>
+                <id>ITEM123</id>
+                <name>Product Name</name>
+                <price>10.99</price>
+                <quantity>2</quantity>
+            </item>
+        </items>
+        <total>21.98</total>
+    </order>
+</orders>

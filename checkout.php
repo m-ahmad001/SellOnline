@@ -2,40 +2,69 @@
 session_start();
 
 if (!isset($_SESSION['customer_id'])) {
-    die("Please log in to checkout.");
+    die("Access denied. Please log in.");
 }
 
-$cart = json_decode(file_get_contents('php://input'), true);
-
-if (empty($cart)) {
-    die("Your cart is empty.");
-}
+$cartData = json_decode(file_get_contents('php://input'), true);
 
 $xml = new DOMDocument();
 $xml->load('goods.xml');
 
-$items = $xml->getElementsByTagName('item');
-$updatedItems = [];
+$orderXml = new DOMDocument();
+$orderXml->load('orders.xml');
 
-foreach ($cart as $cartItem) {
-    $found = false;
-    foreach ($items as $item) {
-        if ($item->getElementsByTagName('id')->item(0)->nodeValue == $cartItem['id']) {
+$newOrder = $orderXml->createElement('order');
+$newOrder->setAttribute('processed', 'false');
+
+$orderId = $orderXml->createElement('id', uniqid('ORDER'));
+$newOrder->appendChild($orderId);
+
+$customerId = $orderXml->createElement('customer_id', $_SESSION['customer_id']);
+$newOrder->appendChild($customerId);
+
+$orderDate = $orderXml->createElement('order_date', date('Y-m-d H:i:s'));
+$newOrder->appendChild($orderDate);
+
+$items = $orderXml->createElement('items');
+$total = 0;
+
+foreach ($cartData as $cartItem) {
+    $itemFound = false;
+    foreach ($xml->getElementsByTagName('item') as $item) {
+        if ($item->getElementsByTagName('id')->item(0)->nodeValue === $cartItem['id']) {
             $quantity = $item->getElementsByTagName('quantity')->item(0);
-            $newQuantity = intval($quantity->nodeValue) - $cartItem['quantity'];
-            if ($newQuantity < 0) {
-                die("Not enough stock for " . $cartItem['name']);
+            $currentQuantity = intval($quantity->nodeValue);
+            $orderedQuantity = intval($cartItem['quantity']);
+            
+            if ($currentQuantity >= $orderedQuantity) {
+                $newQuantity = $currentQuantity - $orderedQuantity;
+                $quantity->nodeValue = $newQuantity;
+                
+                $orderItem = $orderXml->createElement('item');
+                $orderItem->appendChild($orderXml->createElement('id', $cartItem['id']));
+                $orderItem->appendChild($orderXml->createElement('name', $cartItem['name']));
+                $orderItem->appendChild($orderXml->createElement('price', $cartItem['price']));
+                $orderItem->appendChild($orderXml->createElement('quantity', $orderedQuantity));
+                $items->appendChild($orderItem);
+                
+                $total += $cartItem['price'] * $orderedQuantity;
+                $itemFound = true;
+                break;
             }
-            $quantity->nodeValue = $newQuantity;
-            $found = true;
-            break;
         }
     }
-    if (!$found) {
-        die("Item not found: " . $cartItem['name']);
+    if (!$itemFound) {
+        die("Item not found or insufficient quantity: " . $cartItem['name']);
     }
 }
 
-$xml->save('goods.xml');
+$newOrder->appendChild($items);
+$newOrder->appendChild($orderXml->createElement('total', $total));
 
-echo "Checkout successful. Thank you for your purchase!";
+$orderXml->documentElement->appendChild($newOrder);
+
+$xml->save('goods.xml');
+$orderXml->save('orders.xml');
+
+echo json_encode(['status' => 'success', 'message' => "Order placed successfully. Total: $" . number_format($total, 2)]);
+?>

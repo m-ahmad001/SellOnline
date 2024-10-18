@@ -5,29 +5,26 @@ if (!isset($_SESSION['manager'])) {
 }
 
 $data = json_decode(file_get_contents('php://input'), true);
-$itemId = $data['id'];
+$orderId = $data['id'];
 
 $xml = new DOMDocument();
-$xml->load('goods.xml');
+$xml->load('orders.xml');
 
-$items = $xml->getElementsByTagName('item');
+$orders = $xml->getElementsByTagName('order');
 $processed = false;
 
-foreach ($items as $item) {
-    if ($item->getElementsByTagName('id')->item(0)->nodeValue == $itemId) {
-        $quantity = $item->getElementsByTagName('quantity')->item(0);
-        if ($quantity->nodeValue == "0") {
-            $item->parentNode->removeChild($item);
-            $processed = true;
-        }
+foreach ($orders as $order) {
+    if ($order->getElementsByTagName('id')->item(0)->nodeValue == $orderId) {
+        $order->setAttribute('processed', 'true');
+        $processed = true;
         break;
     }
 }
 
 if ($processed) {
-    $xml->save('goods.xml');
-    echo "Item processed successfully.";
+    $xml->save('orders.xml');
+    echo "Order processed successfully.";
 } else {
-    echo "Item not found or already has stock.";
+    echo "Order not found.";
 }
 ?>

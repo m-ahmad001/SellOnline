@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Process Sold Items - BuyOnline</title>
+    <title>Process Orders - BuyOnline</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -13,7 +13,7 @@
             background-color: #f4f4f4;
         }
         .container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
             background-color: #fff;
             padding: 20px;
@@ -38,9 +38,7 @@
             background-color: #f2f2f2;
         }
         button {
-            display: block;
-            margin: 20px auto;
-            padding: 10px 20px;
+            padding: 5px 10px;
             background-color: #007bff;
             color: #fff;
             border: none;
@@ -64,54 +62,70 @@
 </head>
 <body>
     <div class="container">
-        <h1>Process Sold Items</h1>
-        <table id="itemTable">
+        <h1>Process Orders</h1>
+        <table id="orderTable">
             <thead>
                 <tr>
-                    <th>Item Name</th>
-                    <th>Quantity</th>
+                    <th>Order ID</th>
+                    <th>Customer ID</th>
+                    <th>Order Date</th>
+                    <th>Total</th>
+                    <th>Items</th>
                     <th>Action</th>
                 </tr>
             </thead>
-            <tbody id="itemList"></tbody>
+            <tbody id="orderList"></tbody>
         </table>
-        <button id="processAll">Process All Sold Items</button>
+        <button id="processAll" style="display: none; margin: 20px auto;">Process All Orders</button>
         <div id="message"></div>
         <a href="logout.php" class="logout">Logout</a>
         <a href="manager_dashboard.htm" style="display: block; margin-top: 20px; text-align: center;">Back to Dashboard</a>
     </div>
 
     <script>
-        function fetchItems() {
+        function fetchOrders() {
             fetch('get_sold_items.php')
                 .then(response => response.json())
-                .then(items => {
-                    const itemList = document.getElementById('itemList');
-                    itemList.innerHTML = '';
-                    items.forEach(item => {
+                .then(orders => {
+                    const orderList = document.getElementById('orderList');
+                    orderList.innerHTML = '';
+                    orders.forEach(order => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
-                            <td>${item.name}</td>
-                            <td>${item.quantity}</td>
-                            <td><button onclick="processItem('${item.id}')">Process</button></td>
+                            <td>${order.id}</td>
+                            <td>${order.customer_id}</td>
+                            <td>${order.order_date}</td>
+                            <td>$${order.total.toFixed(2)}</td>
+                            <td>
+                                <ul>
+                                    ${order.items.map(item => `
+                                        <li>${item.name} - Quantity: ${item.quantity}, Price: $${item.price.toFixed(2)}</li>
+                                    `).join('')}
+                                </ul>
+                            </td>
+                            <td><button onclick="processOrder('${order.id}')">Process Order</button></td>
                         `;
-                        itemList.appendChild(row);
+                        orderList.appendChild(row);
                     });
                 });
         }
 
-        function processItem(id) {
+        function processOrder(id) {
             fetch('process_item.php', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ id: id }),
             })
             .then(response => response.text())
             .then(result => {
                 document.getElementById('message').textContent = result;
-                fetchItems();
+                fetchOrders();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('message').textContent = 'An error occurred. Please try again.';
             });
         }
 
@@ -122,11 +136,15 @@
             .then(response => response.text())
             .then(result => {
                 document.getElementById('message').textContent = result;
-                fetchItems();
+                fetchOrders();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('message').textContent = 'An error occurred. Please try again.';
             });
         });
 
-        fetchItems();
+        fetchOrders();
     </script>
 </body>
 </html>

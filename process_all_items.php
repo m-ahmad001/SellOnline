@@ -5,24 +5,22 @@ if (!isset($_SESSION['manager'])) {
 }
 
 $xml = new DOMDocument();
-$xml->load('goods.xml');
+$xml->load('orders.xml');
 
-$items = $xml->getElementsByTagName('item');
+$orders = $xml->getElementsByTagName('order');
 $processedCount = 0;
 
-for ($i = $items->length - 1; $i >= 0; $i--) {
-    $item = $items->item($i);
-    $quantity = $item->getElementsByTagName('quantity')->item(0);
-    if ($quantity->nodeValue == "0") {
-        $item->parentNode->removeChild($item);
+foreach ($orders as $order) {
+    if ($order->getAttribute('processed') !== 'true') {
+        $order->setAttribute('processed', 'true');
         $processedCount++;
     }
 }
 
 if ($processedCount > 0) {
-    $xml->save('goods.xml');
-    echo "Processed $processedCount sold item(s) successfully.";
+    $xml->save('orders.xml');
+    echo "Processed $processedCount order(s) successfully.";
 } else {
-    echo "No sold items to process.";
+    echo "No unprocessed orders found.";
 }
 ?>
